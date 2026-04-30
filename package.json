@@ -1,6 +1,6 @@
 {
   "name": "saucer-swap-plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "SaucerSwap plugin for Hedera Agent Kit",
   "main": "dist/index.js",
