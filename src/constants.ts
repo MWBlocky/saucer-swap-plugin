@@ -7,7 +7,6 @@ export const SAUCER_SWAP_CONFIG = {
   // Gas limits
   SWAP_GAS_LIMIT: 15_000_000, // Gas limit for swap transactions
   QUOTE_GAS_LIMIT: 15_000_000, // Gas limit for quote operations
-  DECIMALS_GAS_LIMIT: 15_000_000, // Gas limit for decimals queries
   
   // Gas price (in tinybar)
   DEFAULT_GAS_PRICE: 100_000_000,
