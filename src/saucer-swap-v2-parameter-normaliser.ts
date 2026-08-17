@@ -4,7 +4,7 @@ import { Client } from "@hiero-ledger/sdk";
 import { ethers } from "ethers";
 import z from 'zod';
 import { feeTierToPercent, toBaseUnitBigInt, toSafeExactNumber } from "./utils";
-import SwapRouterAbi from './abi/SwapRouter.json' assert { type: 'json' }
+import SwapRouterAbi from './abi/SwapRouter.json'
 import { SaucerSwapV2ConfigService } from "./service/saucer-swap-v2-config-service";
 import { buildEncodedPath } from "./utils/swap-path";
 import { SAUCER_SWAP_CONFIG } from "./constants";

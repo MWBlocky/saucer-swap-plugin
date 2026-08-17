@@ -1,7 +1,7 @@
 import { SaucerSwapV2QueryService } from './saucer-swap-v2-query-service.interface'
 import { LedgerId } from '@hiero-ledger/sdk'
 import { ethers } from 'ethers'
-import QuoterV2Abi from '../abi/QuoterV2.json' assert { type: 'json' }
+import QuoterV2Abi from '../abi/QuoterV2.json'
 import { IHederaMirrornodeService } from '@hashgraph/hedera-agent-kit'
 import { SaucerSwapV2ConfigService } from './saucer-swap-v2-config-service'
 import { SAUCER_SWAP_CONFIG } from '../constants'
