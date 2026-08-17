@@ -156,6 +156,13 @@ export const formatTokenAmount = (
   decimals: number,
 ): string => fromBaseUnit(amount, decimals).toFixed();
 
+/** WHBAR gets no token id: quoting one would point at something nobody holds. */
+export const describeTokenForUser = (
+  symbol: string,
+  tokenId: string,
+  isWrappedHbar: boolean,
+): string => (isWrappedHbar ? 'native HBAR' : `${symbol} (${tokenId})`);
+
 export const getTokenDecimals = (pool: SaucerSwapV2CompactPool, hederaTokenAddress: string): number => {
   if (pool.tokenA.id === hederaTokenAddress) {
     return pool.tokenA.decimals;

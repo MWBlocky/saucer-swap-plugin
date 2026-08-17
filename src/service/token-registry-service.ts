@@ -223,6 +223,11 @@ export class SaucerSwapTokenRegistry {
       .slice(0, clampLimit(limit));
   }
 
+  /** The WHBAR token, which callers surface to users as native HBAR. */
+  isWrappedHbar(tokenId: string): boolean {
+    return tokenId === this.wrappedHbarTokenId;
+  }
+
   /**
    * Turns whatever a user typed into a single token.
    *

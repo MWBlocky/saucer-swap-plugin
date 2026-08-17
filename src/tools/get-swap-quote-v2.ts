@@ -14,7 +14,7 @@ import { SaucerSwapV2ConfigService } from "../service/saucer-swap-v2-config-serv
 import { SaucerSwapApiServiceImpl } from "../service/saucer-swap-rest-pools-service";
 import { SaucerSwapTokenRegistry } from "../service/token-registry-service";
 import { SaucerSwapError, logToolError } from "../errors";
-import { formatTokenAmount, fromBaseUnit } from "../utils";
+import { describeTokenForUser, formatTokenAmount, fromBaseUnit } from "../utils";
 import { LIST_TOKENS_TOOL } from "./list-saucerswap-tokens";
 
 const getSwapQuoteV2Prompt = (context: Context = {}) => {
@@ -58,9 +58,16 @@ const postProcess = (
     const rate = fromBaseUnit(amountOutBase, params.tokenOutDecimals)
         .dividedBy(fromBaseUnit(params.amountIn, params.tokenInDecimals));
 
+    const tokenInLabel = describeTokenForUser(
+        params.tokenInSymbol, params.tokenInId, params.isInputWrappedHBAR,
+    );
+    const tokenOutLabel = describeTokenForUser(
+        params.tokenOutSymbol, params.tokenOutId, params.isOutputWrappedHBAR,
+    );
+
     return (
-        `Swapping ${amountIn} ${params.tokenInSymbol} (${params.tokenInId}) returns about ` +
-        `${amountOut} ${params.tokenOutSymbol} (${params.tokenOutId}). ` +
+        `Swapping ${amountIn} ${tokenInLabel} returns about ` +
+        `${amountOut} ${tokenOutLabel}. ` +
         `Rate: 1 ${params.tokenInSymbol} ≈ ${rate.toPrecision(8)} ${params.tokenOutSymbol}. ` +
         `Routed through the ${params.feePercent}% fee pool. ` +
         `The quote is indicative — it excludes slippage and Hedera network fees.`

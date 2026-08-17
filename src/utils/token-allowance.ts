@@ -6,7 +6,7 @@ import {
     handleTransaction,
 } from "@hashgraph/hedera-agent-kit";
 import { Client } from "@hiero-ledger/sdk";
-import { toSafeExactNumber } from "../utils";
+import { fromBaseUnit } from "../utils";
 
 export async function hasSufficientAllowance(
     ownerAccountId: string,
@@ -24,11 +24,13 @@ export async function hasSufficientAllowance(
     }
 }
 
+/** @param amount - base units, as the mirror node reports allowances */
 export async function ensureTokenAllowance(
     ownerAccountId: string,
     spenderAccountId: string,
     tokenId: string,
     amount: bigint,
+    decimals: number,
     context: Context,
     client: Client,
     mirrorNode: IHederaMirrornodeService,
@@ -41,7 +43,7 @@ export async function ensureTokenAllowance(
         {
             ownerAccountId,
             spenderAccountId,
-            tokenApprovals: [{ tokenId, amount: toSafeExactNumber(amount) }],
+            tokenApprovals: [{ tokenId, amount: fromBaseUnit(amount, decimals).toNumber() }],
         },
         context,
         client,

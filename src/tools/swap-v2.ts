@@ -21,6 +21,7 @@ import { SaucerSwapV2ConfigService } from "../service/saucer-swap-v2-config-serv
 import { SaucerSwapApiServiceImpl } from "../service/saucer-swap-rest-pools-service";
 import { SaucerSwapTokenRegistry } from "../service/token-registry-service";
 import { SaucerSwapError, TokenNotAssociatedError, logToolError } from "../errors";
+import { describeTokenForUser } from "../utils";
 import { isTokenAssociated } from "../utils/token-association";
 import { ensureTokenAllowance } from "../utils/token-allowance";
 import { LIST_TOKENS_TOOL } from "./list-saucerswap-tokens";
@@ -43,6 +44,9 @@ works when the recipient equals the signing account; otherwise the call fails wi
 and the recipient must associate the token themselves). When tokenIn is not native HBAR / WHBAR,
 the tool also grants an AccountAllowance to the SwapRouter contract for amountIn before swapping.
 
+Asking for HBAR as tokenOut pays out native HBAR: the router unwraps WHBAR as part of the same
+transaction, so the recipient needs no WHBAR association and their HBAR balance goes up.
+
 Parameters:
 - tokenIn (str, required): The token being sold. Symbol, name, Hedera id ("0.0.456858") or EVM address. "HBAR" is routed via WHBAR.
 - tokenOut (str, required): The token being bought, same formats.
@@ -54,8 +58,10 @@ amounts modest on low-liquidity pairs.
 `;
 
 const postProcess = (response: RawTransactionResponse, resolved: ResolvedSwapV2Context) =>
-    `Swapped ${resolved.amountInDisplay} ${resolved.tokenIn.symbol} (${resolved.tokenIn.id}) ` +
-    `for ${resolved.tokenOut.symbol} (${resolved.tokenOut.id}) through the ${resolved.feePercent}% fee pool, ` +
+    `Swapped ${resolved.amountInDisplay} ` +
+    `${describeTokenForUser(resolved.tokenIn.symbol, resolved.tokenIn.id, resolved.isInputWrappedHBAR)} ` +
+    `for ${describeTokenForUser(resolved.tokenOut.symbol, resolved.tokenOut.id, resolved.isOutputWrappedHBAR)} ` +
+    `through the ${resolved.feePercent}% fee pool, ` +
     `sent to ${resolved.recipientAccountId}.\nTransaction ID: ${response.transactionId}`;
 
 const resolveSignerAccountId = (context: Context, client: Client): string | undefined => {
@@ -150,9 +156,11 @@ export class SwapV2Tool extends BaseTool<SwapV2RawParams, SwapV2NormalisedParams
         const mirrorNode = getMirrornodeService(context.mirrornodeService, client.ledgerId!);
         const { contractParams, resolved, spenderAccountId } = normalisedParams;
 
-        await ensureTokenAssociated(
-            resolved.recipientAccountId, resolved.tokenOut.id, context, client, mirrorNode,
-        );
+        if (!resolved.isOutputWrappedHBAR) {
+            await ensureTokenAssociated(
+                resolved.recipientAccountId, resolved.tokenOut.id, context, client, mirrorNode,
+            );
+        }
 
         if (!resolved.isInputWrappedHBAR) {
             const ownerAccountId = resolveSignerAccountId(context, client);
@@ -164,6 +172,7 @@ export class SwapV2Tool extends BaseTool<SwapV2RawParams, SwapV2NormalisedParams
                 spenderAccountId!,
                 resolved.tokenIn.id,
                 resolved.amountInBase,
+                resolved.tokenIn.decimals,
                 context,
                 client,
                 mirrorNode,
