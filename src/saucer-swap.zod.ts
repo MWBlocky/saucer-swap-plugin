@@ -34,6 +34,8 @@ export const getSwapQuoteV2ParametersNormalised = () => z.object({
   tokenOutSymbol: z.string().describe("Output token symbol"),
   tokenOutDecimals: z.number().describe("Output token decimals"),
   feePercent: z.number().describe("Pool fee tier as a percentage"),
+  isInputWrappedHBAR: z.boolean().describe("Whether the input side is native HBAR"),
+  isOutputWrappedHBAR: z.boolean().describe("Whether the output side is native HBAR"),
 });
 
 export const swapV2Parameters = () => z.object({

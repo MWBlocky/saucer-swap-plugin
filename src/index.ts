@@ -1,4 +1,5 @@
 import type { Context, Plugin } from "@hashgraph/hedera-agent-kit";
+import { version } from "../package.json";
 
 import getSwapQuoteV2Tool, { GET_SWAP_QUOTE_V2_TOOL } from "./tools/get-swap-quote-v2";
 import swapV2Tool, { SWAP_V2_TOOL } from "./tools/swap-v2";
@@ -8,7 +9,7 @@ import listSaucerSwapPoolsTool, { LIST_POOLS_TOOL } from "./tools/list-saucerswa
 
 export const saucerSwapPlugin: Plugin = {
   name: 'saucer-swap-plugin',
-  version: '1.0.0',
+  version,
   description: 'A plugin for SaucerSwap V2 DeFi operations on Hedera',
   tools: (context: Context) => {
     return [

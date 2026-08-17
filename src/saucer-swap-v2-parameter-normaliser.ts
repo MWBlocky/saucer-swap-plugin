@@ -23,6 +23,7 @@ export type ResolvedSwapV2Context = {
     /** amountIn as the user expressed it. */
     amountInDisplay: number;
     isInputWrappedHBAR: boolean;
+    isOutputWrappedHBAR: boolean;
     recipientAccountId: string;
     feePercent: number;
 };
@@ -133,6 +134,8 @@ export default class SaucerSwapV2ParameterNormaliser {
             tokenOutSymbol: tokenOut.symbol,
             tokenOutDecimals: tokenOut.decimals,
             feePercent: feeTierToPercent(pool.fee),
+            isInputWrappedHBAR: registry.isWrappedHbar(tokenIn.id),
+            isOutputWrappedHBAR: registry.isWrappedHbar(tokenOut.id),
         };
     }
 
@@ -170,27 +173,33 @@ export default class SaucerSwapV2ParameterNormaliser {
         const swapRouterContractId = saucerSwapV2ConfigService.getSwapRouterContractId()
         const wrappedHBarEvmAddress = saucerSwapV2ConfigService.getWrappedHBarEvmAddress()
 
+        const isInputWrappedHBAR =
+          tokenIn.evmAddress.toLowerCase() === wrappedHBarEvmAddress.toLowerCase();
+        const isOutputWrappedHBAR =
+          tokenOut.evmAddress.toLowerCase() === wrappedHBarEvmAddress.toLowerCase();
+
         const exactInputParams = {
             path: routeDataWithFee,
-            recipient: recipientAddress,
+            recipient: isOutputWrappedHBAR
+                ? saucerSwapV2ConfigService.getRouterAddress()
+                : recipientAddress,
             deadline: Math.floor(Date.now() / 1000) + SAUCER_SWAP_CONFIG.DEFAULT_DEADLINE_SECONDS,
             amountIn: amountIn,
             amountOutMinimum: 0
         };
 
         const swapEncoded = abiSwapRouterInterface.encodeFunctionData('exactInput', [exactInputParams]);
-        const refundHBAREncoded = abiSwapRouterInterface.encodeFunctionData('refundETH');
 
-        const multiCallParam = [swapEncoded, refundHBAREncoded];
+        const multiCallParam = [
+            swapEncoded,
+            isOutputWrappedHBAR
+                ? abiSwapRouterInterface.encodeFunctionData('unwrapWHBAR', [0, recipientAddress])
+                : abiSwapRouterInterface.encodeFunctionData('refundETH'),
+        ];
 
         const encodedData = abiSwapRouterInterface.encodeFunctionData('multicall', [multiCallParam]);
 
         const functionParameters = ethers.getBytes(encodedData);
-
-        // Selling wrapped HBAR means the router is paid in native HBAR, which rides
-        // along as the payable amount rather than as a token transfer.
-        const isInputWrappedHBAR =
-          tokenIn.evmAddress.toLowerCase() === wrappedHBarEvmAddress.toLowerCase();
 
         const contractParams = {
           contractId: swapRouterContractId.toString(),
@@ -207,6 +216,7 @@ export default class SaucerSwapV2ParameterNormaliser {
                 amountInBase: amountIn,
                 amountInDisplay: parsedParams.amountIn,
                 isInputWrappedHBAR,
+                isOutputWrappedHBAR,
                 recipientAccountId: recipient,
                 feePercent: feeTierToPercent(poolFees),
             },
